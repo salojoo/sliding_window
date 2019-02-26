@@ -1,7 +1,7 @@
 # SlidingWindow
 
 ## Running
-Run from command line with -h argument for help
+Run from command line with -help for instructions
 
 ## Test data
 Test data available in data directory
