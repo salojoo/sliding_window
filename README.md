@@ -1,4 +1,4 @@
-# sliding_window
+# SlidingWindow
 
 ## Running
 Run from command line with -h argument for help
