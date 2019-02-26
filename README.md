@@ -20,6 +20,6 @@ In the worst case the sort algorithm needs to sort 10000 items for each window. 
 
 As 9999 items of 10000 are already sorted, this would only require finding the place for one item on each iteration of AddDelay()
 
-The sort algorithm might also be changed to something more optimal than standard golang sort(). As the value range is low, a simple bucket sort might do the trick in fastest possible way.
+The sort algorithm might also be changed to something more optimal than standard golang sort(). As the value range is low, a simple bucket sort could be considered.
 
 Optimizing the sort algorithm should give more performance than parallel processing if window sizes are big.
