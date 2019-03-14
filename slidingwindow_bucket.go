@@ -55,12 +55,10 @@ func (sw *SlidingWindowBucket) GetMedian() int {
 
 	if currentSize%2 == 1 {
 		return sw.findValueFromBucket((currentSize+1)/2 - 1)
-		//return sortedItems[(currentSize+1)/2-1]
 	} else {
 		value1 := sw.findValueFromBucket(currentSize/2 - 1)
 		value2 := sw.findValueFromBucket(currentSize/2 + 1 - 1)
 		return (value1 + value2) / 2
-		//return (sortedItems[currentSize/2-1] + sortedItems[currentSize/2+1-1]) / 2
 	}
 }
 
@@ -71,6 +69,7 @@ func (sw *SlidingWindowBucket) findValueFromBucket(index int) (bucketValue int) 
 		panic("Bucket is too small")
 	}
 
+	// constant retrieval time
 	for i, count := range sw.bucket {
 		search += count
 		if search > index {
