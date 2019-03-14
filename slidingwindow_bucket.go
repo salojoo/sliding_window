@@ -66,10 +66,10 @@ func (sw *SlidingWindowBucket) findValueFromBucket(index int) (bucketValue int) 
 	search := sw.minBucket
 
 	if index < search {
-		panic("Bucket is too small")
+		panic("Bucket is too small, need lower minimum")
 	}
 
-	// constant retrieval time
+	// fast retrieval time, loop only over the size of the bucket
 	for i, count := range sw.bucket {
 		search += count
 		if search > index {
@@ -78,5 +78,5 @@ func (sw *SlidingWindowBucket) findValueFromBucket(index int) (bucketValue int) 
 		}
 	}
 
-	panic("Bucket is too small")
+	panic("Bucket is too small, need bigger maximum")
 }
