@@ -6,20 +6,41 @@ Run from command line with -help for instructions
 ## Test data
 Test data available in data directory
 
-## Optimizations
-Current implementation is very inefficient and could be improved at least in two different ways
+## Benchmarks
+Three benchmarks were run and timed on local desktop. Two first use traditional sorting, while the last one uses bucket sort. 
 
-### Parallel
-Input files could be split so sliding windows could run in parallel. This would give performance boost of 2x, 4x, 8x, or the number of cores available
+Bucket sort makes the application instantanous and easily capable of realtime processing. The drawback with bucket sort, is that it needs a predefined range of values as the size of the bucket. It can only be applied if the value range is small enough
 
-### Optimizing the sort algorithm
-In the worst case the sort algorithm needs to sort 10000 items for each window. A more efficient flow would be to keep a sorted window in memory. Then on AddDelay():
-- remove oldest value 
-- add new value
-- sort again
 
-As 9999 items of 10000 are already sorted, this would only require finding the place for one item on each iteration of AddDelay()
+### Original naive solution using sort
+joonas@skylake:~/go/src/github.com/salojoo/sliding_window$ time ./sliding_window -input data/test4.csv -output data/sort4.csv -window 10000 -algorithm sort
+Processing file data/test4.csv
+Window targetSize 10000
+Processed 100000 lines
 
-The sort algorithm might also be changed to something more optimal than standard golang sort(). As the value range is low, a simple bucket sort could be considered.
+real	2m44,994s
+user	2m44,729s
+sys	0m0,321s
 
-Optimizing the sort algorithm should give more performance than parallel processing if window sizes are big.
+### Optimized by using incremental sort instead of recreating the whole window
+joonas@skylake:~/go/src/github.com/salojoo/sliding_window$ time ./sliding_window -input data/test4.csv -output data/optimized4.csv -window 10000 -algorithm optimized
+Processing file data/test4.csv
+Window targetSize 10000
+Processed 100000 lines
+
+real	1m26,080s
+user	1m26,056s
+sys	0m0,060s
+
+### Bucket sort
+joonas@skylake:~/go/src/github.com/salojoo/sliding_window$ time ./sliding_window -input data/test4.csv -output data/bucket4.csv -window 10000 -algorithm bucket -min 200 -max 500
+Processing file data/test4.csv
+Window targetSize 10000
+Processed 100000 lines
+
+real	0m0,058s
+user	0m0,057s
+sys	0m0,000s
+
+
+

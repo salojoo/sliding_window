@@ -15,6 +15,9 @@ func main() {
 	inputFilename := flag.String("input", "", "Input file")
 	outputFilename := flag.String("output", "", "Output file")
 	windowSize := flag.Int("window", 5, "Sliding window targetSize")
+	algorithm := flag.String("algorithm", "sort", "Algorithm [sort|optimized|bucket]")
+	bucketMin := flag.Int("min", 100, "Minimum high resolution value for bucket sort")
+	bucketMax := flag.Int("max", 200, "Maximum high resolution value for bucket sort")
 	flag.Parse()
 
 	if len(*inputFilename) < 1 || len(*outputFilename) < 1 {
@@ -40,7 +43,14 @@ func main() {
 	}
 	defer outputFile.Close()
 
-	sw := SlidingWindow{targetSize: *windowSize}
+	var sw SlidingWindow
+	if *algorithm == "sort" {
+		sw = &SlidingWindowSort{targetSize: *windowSize}
+	} else if *algorithm == "optimized" {
+		sw = &SlidingWindowOptimized{targetSize: *windowSize}
+	} else if *algorithm == "bucket" {
+		sw = NewSlidingWindowBucket(*windowSize, *bucketMin, *bucketMax)
+	}
 
 	writer := bufio.NewWriter(outputFile)
 
