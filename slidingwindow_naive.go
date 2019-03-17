@@ -2,19 +2,19 @@ package main
 
 import "sort"
 
-type SlidingWindowSort struct {
+type SlidingWindowNaive struct {
 	targetSize int
-	items      []int
+	items      []int // TODO refactor as circular array to have constant insertion and deletion
 }
 
-func (sw *SlidingWindowSort) AddDelay(delay int) {
+func (sw *SlidingWindowNaive) AddDelay(delay int) {
 	sw.items = append(sw.items, delay)
 	if len(sw.items) > sw.targetSize {
 		sw.items = sw.items[1:]
 	}
 }
 
-func (sw *SlidingWindowSort) GetMedian() int {
+func (sw *SlidingWindowNaive) GetMedian() int {
 	currentSize := len(sw.items)
 
 	if currentSize == 1 {

@@ -12,8 +12,8 @@ Three benchmarks were run and timed on local desktop. Two first use traditional 
 Bucket sort makes the application instantaneous and easily capable of realtime processing. The drawback with bucket sort, is that it needs a predefined range of values as the size of the bucket. It can only be applied if the value range is small enough
 
 
-### Original naive solution using sort
-time ./sliding_window -input data/test4.csv -output data/sort4.csv -window 10000 -algorithm sort
+### Original naive solution
+$ time ./sliding_window -input data/test4.csv -output data/naive4.csv -window 10000 -algorithm naive
 
 Processing file data/test4.csv
 
@@ -26,7 +26,7 @@ user	2m44,729s
 sys	0m0,321s
 
 ### Optimized by using incremental sort instead of recreating the whole window
-time ./sliding_window -input data/test4.csv -output data/optimized4.csv -window 10000 -algorithm optimized
+$ time ./sliding_window -input data/test4.csv -output data/optimized4.csv -window 10000 -algorithm optimized
 
 Processing file data/test4.csv
 
@@ -39,7 +39,7 @@ user	1m26,056s
 sys	0m0,060s
 
 ### Bucket sort
-time ./sliding_window -input data/test4.csv -output data/bucket4.csv -window 10000 -algorithm bucket -min 200 -max 500
+$ time ./sliding_window -input data/test4.csv -output data/bucket4.csv -window 10000 -algorithm bucket -min 200 -max 500
 
 Processing file data/test4.csv
 

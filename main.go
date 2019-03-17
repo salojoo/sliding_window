@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -9,71 +10,92 @@ import (
 	"strings"
 )
 
-var LINE_CHANGE = "\r\n"
+var lineChange = "\r\n"
+
+type Config struct {
+	inputFilename  *string
+	outputFilename *string
+	windowSize     *int
+	algorithm      *string
+	bucketMin      *int
+	bucketMax      *int
+}
 
 func main() {
-	inputFilename := flag.String("input", "", "Input file")
-	outputFilename := flag.String("output", "", "Output file")
-	windowSize := flag.Int("window", 5, "Sliding window targetSize")
-	algorithm := flag.String("algorithm", "sort", "Algorithm [sort|optimized|bucket]")
-	bucketMin := flag.Int("min", 100, "Minimum high resolution value for bucket sort")
-	bucketMax := flag.Int("max", 200, "Maximum high resolution value for bucket sort")
-	flag.Parse()
-
-	if len(*inputFilename) < 1 || len(*outputFilename) < 1 {
-		flag.PrintDefaults()
+	var config Config
+	if err := parseParameters(&config); err != nil {
+		fmt.Println(err)
 		return
 	}
 
-	fmt.Println("Processing file", *inputFilename)
-	fmt.Println("Window targetSize", *windowSize)
+	fmt.Println("Processing file", *config.inputFilename)
+	fmt.Println("Window targetSize", *config.windowSize)
 
-	inputFile, err := os.Open(*inputFilename)
+	if err := process(config); err != nil {
+		fmt.Println("Error in processing", err)
+	}
+}
+
+func parseParameters(config *Config) error {
+	config.inputFilename = flag.String("input", "", "Input file")
+	config.outputFilename = flag.String("output", "", "Output file")
+	config.windowSize = flag.Int("window", 5, "Sliding window targetSize")
+	config.algorithm = flag.String("algorithm", "naive", "Algorithm [naive|optimized|bucket]")
+	config.bucketMin = flag.Int("min", 100, "Minimum high resolution value for bucket algorithm")
+	config.bucketMax = flag.Int("max", 200, "Maximum high resolution value for bucket algorithm")
+	flag.Parse()
+
+	if len(*config.inputFilename) < 1 || len(*config.outputFilename) < 1 {
+		flag.PrintDefaults()
+		return errors.New("invalid config")
+	}
+
+	return nil
+}
+
+func createSlidingWindow(config Config) SlidingWindow {
+	if *config.algorithm == "naive" {
+		return &SlidingWindowNaive{targetSize: *config.windowSize}
+	} else if *config.algorithm == "optimized" {
+		return &SlidingWindowOptimized{targetSize: *config.windowSize}
+	} else if *config.algorithm == "bucket" {
+		return NewSlidingWindowBucket(*config.windowSize, *config.bucketMin, *config.bucketMax)
+	}
+	return nil
+}
+
+func process(config Config) (err error) {
+	inputFile, err := os.Open(*config.inputFilename)
 	if err != nil {
-		fmt.Println("Error opening file", *inputFilename, err)
+		fmt.Println("Error opening file", *config.inputFilename, err)
 		return
 	}
 	defer inputFile.Close()
 	scanner := bufio.NewScanner(inputFile)
 
-	outputFile, err := os.Create(*outputFilename)
+	outputFile, err := os.Create(*config.outputFilename)
 	if err != nil {
-		fmt.Println("Error creating file", *outputFilename, err)
+		fmt.Println("Error creating file", *config.outputFilename, err)
 		return
 	}
 	defer outputFile.Close()
-
-	var sw SlidingWindow
-	if *algorithm == "sort" {
-		sw = &SlidingWindowSort{targetSize: *windowSize}
-	} else if *algorithm == "optimized" {
-		sw = &SlidingWindowOptimized{targetSize: *windowSize}
-	} else if *algorithm == "bucket" {
-		sw = NewSlidingWindowBucket(*windowSize, *bucketMin, *bucketMax)
-	}
-
 	writer := bufio.NewWriter(outputFile)
+
+	sw := createSlidingWindow(config)
 
 	var lines int
 	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		if len(line) < 1 {
+		var value int
+		if value, err = readLine(scanner); err != nil {
+			fmt.Println("Skipping line:", err)
 			continue
 		}
 
-		value, err := strconv.ParseInt(line, 10, 64)
-		if err != nil {
-			fmt.Println("Could not parse integer from line:", line)
-			continue
-		}
+		sw.AddDelay(value)
 
-		sw.AddDelay(int(value))
-
-		if _, err := writer.WriteString(strconv.Itoa(sw.GetMedian())); err != nil {
-			fmt.Println("Error writing to file", err)
-		}
-		if _, err := writer.WriteString(LINE_CHANGE); err != nil {
-			fmt.Println("Error writing to file", err)
+		if err = writeLine(sw.GetMedian(), writer); err != nil {
+			fmt.Println("Could not write to file:", err)
+			return
 		}
 
 		lines += 1
@@ -84,4 +106,25 @@ func main() {
 	}
 
 	fmt.Println("Processed", lines, "lines")
+
+	return nil
+}
+
+func readLine(scanner *bufio.Scanner) (int, error) {
+	line := strings.TrimSpace(scanner.Text())
+	if len(line) < 1 {
+		return 0, errors.New("short line")
+	}
+
+	value, err := strconv.ParseInt(line, 10, 64)
+	return int(value), err
+}
+
+func writeLine(value int, writer *bufio.Writer) (err error) {
+	if _, err = writer.WriteString(strconv.Itoa(value)); err != nil {
+		return
+	}
+	_, err = writer.WriteString(lineChange)
+
+	return
 }

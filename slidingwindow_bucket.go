@@ -2,7 +2,8 @@ package main
 
 type SlidingWindowBucket struct {
 	targetSize int
-	items      []int
+
+	items []int // TODO refactor as circular array to have constant insertion and deletion
 
 	// value range for "high-resolution" bucket counter
 	min int
@@ -20,30 +21,8 @@ func NewSlidingWindowBucket(targetSize int, min int, max int) (sw *SlidingWindow
 }
 
 func (sw *SlidingWindowBucket) AddDelay(delay int) {
-	sw.items = append(sw.items, delay)
-
-	// constant insertion time
-	if delay < sw.min {
-		sw.minBucket += 1
-	} else if delay > sw.max {
-		sw.maxBucket += 1
-	} else {
-		sw.bucket[delay-sw.min] += 1
-	}
-
-	if len(sw.items) > sw.targetSize {
-		valueToRemove := sw.items[0]
-		sw.items = sw.items[1:]
-
-		// constant removal time
-		if valueToRemove < sw.min {
-			sw.minBucket -= 1
-		} else if valueToRemove > sw.max {
-			sw.maxBucket -= 1
-		} else {
-			sw.bucket[valueToRemove-sw.min] -= 1
-		}
-	}
+	sw.addItem(delay)
+	sw.removeOldestItem()
 }
 
 func (sw *SlidingWindowBucket) GetMedian() int {
@@ -62,10 +41,41 @@ func (sw *SlidingWindowBucket) GetMedian() int {
 	}
 }
 
+func (sw *SlidingWindowBucket) addItem(delay int) {
+	sw.items = append(sw.items, delay)
+
+	// constant insertion time
+	if delay < sw.min {
+		sw.minBucket += 1
+	} else if delay > sw.max {
+		sw.maxBucket += 1
+	} else {
+		sw.bucket[delay-sw.min] += 1
+	}
+}
+
+func (sw *SlidingWindowBucket) removeOldestItem() {
+	if len(sw.items) > sw.targetSize {
+		valueToRemove := sw.items[0]
+
+		// constant removal time
+		if valueToRemove < sw.min {
+			sw.minBucket -= 1
+		} else if valueToRemove > sw.max {
+			sw.maxBucket -= 1
+		} else {
+			sw.bucket[valueToRemove-sw.min] -= 1
+		}
+
+		sw.items = sw.items[1:]
+	}
+}
+
 func (sw *SlidingWindowBucket) findValueFromBucket(index int) (bucketValue int) {
 	search := sw.minBucket
 
 	if index < search {
+		// TODO error handling instead of panic
 		panic("Bucket is too small, need lower minimum")
 	}
 
@@ -78,5 +88,6 @@ func (sw *SlidingWindowBucket) findValueFromBucket(index int) (bucketValue int) 
 		}
 	}
 
+	// TODO error handling instead of panic
 	panic("Bucket is too small, need bigger maximum")
 }

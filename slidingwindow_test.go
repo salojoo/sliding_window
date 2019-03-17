@@ -2,16 +2,16 @@ package main
 
 import "testing"
 
-func TestSlidingWindowSort_AddDelay(t *testing.T) {
-	sw := SlidingWindowSort{targetSize: 2}
+func TestSlidingWindowNaive_AddDelay(t *testing.T) {
+	sw := SlidingWindowNaive{targetSize: 2}
 	sw.AddDelay(1)
 	sw.AddDelay(2)
 	sw.AddDelay(3)
 
 }
 
-func TestSlidingWindowSort_GetMedian(t *testing.T) {
-	sw := SlidingWindowSort{targetSize: 3}
+func TestSlidingWindowNaive_GetMedian(t *testing.T) {
+	sw := SlidingWindowNaive{targetSize: 3}
 
 	sw.AddDelay(100)
 	if sw.GetMedian() != -1 {

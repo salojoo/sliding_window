@@ -4,7 +4,7 @@ import "sort"
 
 type SlidingWindowOptimized struct {
 	targetSize  int
-	items       []int
+	items       []int // TODO refactor as circular array to have constant insertion and deletion
 	sortedItems []int
 }
 
